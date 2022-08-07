@@ -1,0 +1,228 @@
+---
+title: 'Bellabeat : Smart Health Devices'
+author: "Himanshu Dwivedi"
+date: "2022-08-06"
+output:
+  html_document: default
+  pdf_document: default
+---
+### Background
+Bellabeat, a high-tech manufacturer of health-focused products for women is successful small company, but they have the potential to become a larger player in the global smart device market. Urška Sršen, cofounder and Chief Creative Officer of Bellabeat, believes that analyzing smart device fitness data could help unlock new growth opportunities for the company.
+
+### Purpose of Data Analysis
+This report will focus on one of Bellabeat’s products and analyze smart device data to gain insight into how consumers are using their smart devices.
+We would be looking deeper into the raw data and gather insights which will help in creating marketing strategy for the company.
+
+### Stakeholders and intended audience
+Important stakeholders involved in overall analysis are:
+\* Bellabeat’s cofounder and Chief Creative Officer\
+\* Bellabeat executive team\
+\* A team of data analysts\
+\* Bellabeat's Users
+
+### Data Sources
+User data from 4th December 2016 to 5th December 2016 has been made public.The data is in form of CSV files taken from the data source: https://www.kaggle.com/arashnic/fitbit .
+
+### Exploratory Data Analysis(EDA)
+
+#### Tools for Analysis
+Considering the size of the data and visualization needed to complete this analysis, R Programming is used.
+```{r}
+#Load the necessary libraries that will be utilized for the project
+library(tidyverse)
+library(lubridate)
+library(janitor)
+library(dplyr)
+library(ggplot2)
+library(readr)
+```
+
+#### Loading Data
+```{r}
+#Loading csv files
+
+Activity <- read_csv("C:/Users/Himan/OneDrive/Desktop/Project_Bellabeat/Fitabase Data 4.12.16-5.12.16/dailyActivity_merged.csv")
+Calories <- read_csv("C:/Users/Himan/OneDrive/Desktop/Project_Bellabeat/Fitabase Data 4.12.16-5.12.16/dailyCalories_merged.csv")
+Intensities <- read_csv("C:/Users/Himan/OneDrive/Desktop/Project_Bellabeat/Fitabase Data 4.12.16-5.12.16/dailyIntensities_merged.csv")
+Steps <- read_csv("C:/Users/Himan/OneDrive/Desktop/Project_Bellabeat/Fitabase Data 4.12.16-5.12.16/dailySteps_merged.csv")
+Sleep <- read_csv("C:/Users/Himan/OneDrive/Desktop/Project_Bellabeat/Fitabase Data 4.12.16-5.12.16/sleepDay_merged.csv")
+Weight <- read_csv("C:/Users/Himan/OneDrive/Desktop/Project_Bellabeat/Fitabase Data 4.12.16-5.12.16/weightLogInfo_merged.csv")
+Heart_rate <- read_csv("C:/Users/Himan/OneDrive/Desktop/Project_Bellabeat/Fitabase Data 4.12.16-5.12.16/heartrate_seconds_merged.csv")
+
+```
+
+#### Exploring Data
+```{r}
+#Exploring our data. we will use str(),head(),colnames and glimpse() functions.
+
+glimpse(Activity)
+glimpse(Calories)
+glimpse(Intensities)
+glimpse(Sleep)
+glimpse(Steps)
+glimpse(Weight)
+glimpse(Heart_rate)
+```
+Observations- We can see that in every dataset Date is in character format so we will change it. Also at                     someplaces it written as activityday and some as activity date.
+             
+#### Cleaning and Formatting Data              
+```{r}
+#Renaming & Converting date(char) into date(date) in Activity dataset
+Activity <- Activity %>%
+ rename(Date = ActivityDate) %>%
+ mutate(Date = as.Date(Date,format="%m /%d /%y"))
+
+#Renaming & Converting date(char) into date(date) in Calories dataset
+Calories <- Calories %>%
+ rename(Date = ActivityDay) %>%
+ mutate(Date = as.Date(Date,format="%m /%d /%y"))
+
+#Renaming & converting date(char) into date(date) in Intensities dataset
+Intensities <- Intensities %>%
+ rename(Date = ActivityDay) %>%
+ mutate(Date = as.Date(Date,format="%m /%d /%y"))
+
+#Renaming & converting date(char) into date(date) in Sleep dataset
+Sleep <- Sleep %>%
+rename(Date = SleepDay) %>%
+mutate(Date = as.Date(Date,format="%m /%d /%y"))
+
+#Renaming & converting date(char) into date(date) in Steps dataset
+Steps <- Steps %>%
+rename(Date = ActivityDay) %>%
+mutate(Date = as.Date(Date,format="%m /%d /%y"))
+
+#Converting date(char) into date(date) in Weight dataset
+Weight <- Weight %>%
+mutate(Date = as.Date(Date,format="%m /%d /%y"))
+
+
+```
+
+
+#### Distinct id feature in every dataset
+```{r}
+#checking distinct id feature in every dataset
+n_distinct(Weight$Id)
+n_distinct(Activity$Id)
+n_distinct(Steps$Id)
+n_distinct(Intensities$Id)
+n_distinct(Calories$Id)
+n_distinct(Sleep$Id)
+
+```
+OBSERVATION- 33 Distinct values of ID in Activity, Steps, Intensities,Calories .
+             Whereas only 8 people entered there weight and 24 tracked there sleep.
+
+####  Null Values & Duplicates
+```{r}
+#checking duplicates and null values in Activity
+sum(duplicated(Activity))
+sum(is.na(Activity))
+
+#checking duplicates and null values Calories
+sum(duplicated(Calories))
+sum(is.na(Calories))
+
+#checking duplicates and null values Intensities
+sum(duplicated(Intensities))
+sum(is.na(Intensities))
+
+#checking duplicates and null values Sleep
+sum(duplicated(Sleep))
+sum(is.na(Sleep))
+
+#checking duplicates and null values Step
+sum(duplicated(Steps))
+sum(is.na(Steps))
+```
+
+#### Removing the duplicates found in Sleep dataset
+```{r}
+#remove 3 duplicates we found
+Sleep <- Sleep %>% 
+  distinct()
+sum(duplicated(Sleep))
+```
+#### Summary Statistics 
+
+```{r}
+#statistics of TotalDistance and TotalSteps
+Activity%>%
+select(TotalDistance,
+TotalSteps)%>%
+summary()
+```
+```{r}
+#statistics of TotalDistance , SedementaryMinutes and Calories
+Activity%>%
+select(TotalDistance,SedentaryMinutes,Calories)%>%
+summary()
+```
+```{r}
+#statistics of Weight and BMI
+Weight%>%
+select(WeightKg,BMI)%>%
+summary()
+```
+OBSERVATION - From above statistics we can see a trend between steps, sedentaryminutes and Weight.(as steps increase               the calories burnt increases.)
+              We will create plots to confirm our hypothesis and see any other trends.
+
+### Visualising Data
+
+#### Creation of Plots
+```{r}
+#Creating Scatter Plot between TotalTimeInBed & TotalMinutesAsleep
+ggplot(data=Sleep , aes(x=TotalTimeInBed, y=TotalMinutesAsleep)) +
+  geom_point() +
+  geom_smooth() + 
+  labs(title="DailySleep", subtitle ="TotalTimeInBed vs. TotalMinutesAsleep",caption ="Source:Kaggle Datasets")
+```
+
+```{r}
+#Creating Scatter Plot between TotalSteps & Calories
+ggplot(data=Activity, mapping =aes(x=TotalSteps, y=Calories, color=Calories)) +
+  geom_point() +
+  geom_smooth(method ="loess" ) +
+  labs(title="DailyActivity", subtitle ="TotalSteps vs. Calories", caption ="Source:Kaggle Datasets") +
+  scale_color_gradient(low = "yellow", high ="red")
+``` 
+```{r}
+#Creating Scatter Plot between SedentaryMinutes & Calories
+ggplot(data=Activity, mapping =aes(x=SedentaryMinutes, y=Calories, color=Calories)) +
+  geom_point() +
+  geom_smooth(method ="loess" ) +
+  labs(title="DailyActivity", subtitle ="SedentaryMinutes vs. Calories", caption ="Source:Kaggle Datasets") +
+  scale_color_gradient(low = "yellow", high ="red")
+```
+ 
+
+```{r}
+#Creating Scatter Plot between SedentaryMinutes & Weight
+intensity_weight<-merge(Intensities,Weight,by=c('Id'))
+ggplot(data=intensity_weight, aes(x=SedentaryMinutes, y=WeightKg, fill="red")) + geom_point() + geom_smooth() + labs(title ="intensity_weight" , subtitle="SedentaryMinutes vs. WeightKg", caption = "Source:Kaggle Datasets")
+```
+
+
+
+
+### Key Takeaways
+
+\*People living a sedentary lifestyle tend to gain more weight.\
+\*People with increased weight have more BMI . BMI can depict there health condition.\
+\*A lot of people involved in sample did not updated their weight.\
+\*All the analysis clearly shows that more movement of body results in more calorie loss. \
+\*Sleepquality and Totalactivity time dont have any relationship as such.\
+
+### Recommendations
+
+This report recommends the following:
+\**Sample size was small so we sholud work on collecting more data. \
+\**People should be encouraged to log there weights.\
+\*company should send notifications on daily or weekly basis to keep customers informed about their activity. \
+\*Early warning signs can be added to their devices that can track any sudden changes in heart rate and other body signs. \
+\*The app interface should be simple so that customer can make entries easily.\
+
+
+
+
